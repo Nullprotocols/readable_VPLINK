@@ -51,7 +51,8 @@ from database import (
     get_free_credit_setting, set_free_credit_setting,
     generate_free_tokens, bulk_update_short_links,
     get_available_link_for_user, verify_and_claim_free_token,
-    get_pool_stats, cleanup_expired_reserved
+    get_pool_stats, cleanup_expired_reserved,
+    update_reserved_link_message
 )
 
 # PDF generation imports
@@ -475,7 +476,9 @@ async def process_api_call(message: types.Message, api_type: str, input_data: st
             # Check if free credit feature enabled
             feature_enabled = await get_free_credit_setting('feature_enabled')
             if feature_enabled == '1':
-                short_link = await get_available_link_for_user(user_id)
+                # पहले एक अस्थायी मैसेज भेजो ताकि उसकी ID मिल सके
+                temp_msg = await message.reply("🔄 Checking available offers...")
+                short_link = await get_available_link_for_user(user_id, chat_id=message.chat.id, message_id=temp_msg.message_id)
                 if short_link:
                     text = (
                         "❌ <b>Aapke credits khatam ho gaye hain!</b>\n\n"
@@ -484,10 +487,14 @@ async def process_api_call(message: types.Message, api_type: str, input_data: st
                     )
                     keyboard = InlineKeyboardMarkup(inline_keyboard=[
                         [InlineKeyboardButton(text="🎁 FREE CREDITS LEIN", url=short_link)],
+                        [InlineKeyboardButton(text="📺 Tutorial: Link Kaise Kholein", url="https://youtu.be/Bjki4HtCKFs")],
                         [InlineKeyboardButton(text="💳 Credits Buy Karein", url="https://t.me/Nullprotocol_X")]
                     ])
-                    await message.reply(text, parse_mode="HTML", reply_markup=keyboard)
+                    await temp_msg.edit_text(text, parse_mode="HTML", reply_markup=keyboard)
+                    # मैसेज आईडी अपडेट करो (पहले से ही get_available_link_for_user में सेव हो गई, लेकिन हम एडिट के बाद भी अपडेट कर सकते हैं)
+                    await update_reserved_link_message(user_id, temp_msg.chat.id, temp_msg.message_id)
                 else:
+                    await temp_msg.delete()
                     keyboard = InlineKeyboardMarkup(inline_keyboard=[
                         [InlineKeyboardButton(text="💳 Credits Buy Karein", url="https://t.me/Nullprotocol_X")]
                     ])
@@ -629,14 +636,21 @@ async def start_command(message: types.Message, command: CommandObject):
     args = command.args
     if args and args.startswith("free_"):
         token = args[5:]
-        success, result = await verify_and_claim_free_token(token, user_id)
+        success, result, chat_id, message_id = await verify_and_claim_free_token(token, user_id)
         if success:
-            await update_credits(user_id, result)
+            credits_to_add = result
+            await update_credits(user_id, credits_to_add)
             await message.answer(
-                f"✅ <b>Badhai ho!</b> Aapko <b>{result} free credits</b> mil gaye!\n\n"
-                f"💰 Naya balance: {user['credits'] + result} credits.",
+                f"🎉 <b>Badhai ho!</b> Aapko <b>{credits_to_add} free credits</b> mil gaye!\n\n"
+                f"💰 Naya balance: {user['credits'] + credits_to_add} credits.",
                 parse_mode="HTML"
             )
+            # पुराना मैसेज डिलीट करो
+            if chat_id and message_id:
+                try:
+                    await bot.delete_message(chat_id, message_id)
+                except Exception as e:
+                    logging.error(f"Failed to delete message: {e}")
         else:
             await message.answer(f"❌ {result}", parse_mode="HTML")
         # continue normal flow
@@ -980,7 +994,11 @@ async def show_admin_panel(chat_id, message_id=None):
 
 @dp.message(Command("admin"))
 async def admin_panel(message: types.Message):
-    await show_admin_panel(message.from_user.id)
+    user_id = message.from_user.id
+    admin_level = await is_user_admin(user_id)
+    if not admin_level:
+        return
+    await show_admin_panel(user_id)
 
 @dp.callback_query(F.data == "admin_back")
 async def admin_back(callback: types.CallbackQuery):
@@ -1324,8 +1342,6 @@ async def free_upload_handler(message: types.Message, state: FSMContext):
     await state.clear()
 
 # ================== ORIGINAL HANDLERS (Broadcast, DM, Gift, Ban, etc.) ==================
-# (All original handlers are included below, exactly as they were in the user's original code)
-
 @dp.callback_query(F.data == "broadcast_now")
 async def broadcast_now(callback: types.CallbackQuery, state: FSMContext):
     await callback.message.answer("📢 <b>Send message to broadcast</b> (text, photo, video, etc.):", parse_mode="HTML")
@@ -2370,7 +2386,8 @@ async def auto_number_lookup(message: types.Message, state: FSMContext):
     if not admin_level and not is_premium and user['credits'] < 1:
         feature_enabled = await get_free_credit_setting('feature_enabled')
         if feature_enabled == '1':
-            short_link = await get_available_link_for_user(user_id)
+            temp_msg = await message.reply("🔄 Checking available offers...")
+            short_link = await get_available_link_for_user(user_id, chat_id=message.chat.id, message_id=temp_msg.message_id)
             if short_link:
                 text = (
                     "❌ <b>Aapke credits khatam ho gaye hain!</b>\n\n"
@@ -2379,10 +2396,13 @@ async def auto_number_lookup(message: types.Message, state: FSMContext):
                 )
                 keyboard = InlineKeyboardMarkup(inline_keyboard=[
                     [InlineKeyboardButton(text="🎁 FREE CREDITS LEIN", url=short_link)],
+                    [InlineKeyboardButton(text="📺 Tutorial: Link Kaise Kholein", url="https://youtu.be/Bjki4HtCKFs")],
                     [InlineKeyboardButton(text="💳 Credits Buy Karein", url="https://t.me/Nullprotocol_X")]
                 ])
-                await message.reply(text, parse_mode="HTML", reply_markup=keyboard)
+                await temp_msg.edit_text(text, parse_mode="HTML", reply_markup=keyboard)
+                await update_reserved_link_message(user_id, temp_msg.chat.id, temp_msg.message_id)
             else:
+                await temp_msg.delete()
                 keyboard = InlineKeyboardMarkup(inline_keyboard=[
                     [InlineKeyboardButton(text="💳 Credits Buy Karein", url="https://t.me/Nullprotocol_X")]
                 ])
