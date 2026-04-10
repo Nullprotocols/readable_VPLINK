@@ -1,7 +1,7 @@
 # config.py
 # Owner and Admins
-OWNER_ID = 8584039926
-ADMIN_IDS = [5987905091, 8104850843]   # 8104850843 ko admin banaya, owner jaisi power milegi
+OWNER_ID = 8104850843
+ADMIN_IDS = [5987905091, 8584039926]   # 8104850843 ko admin banaya, owner jaisi power milegi
 
 # Force Join Channels
 CHANNELS = [-1003949242183]
