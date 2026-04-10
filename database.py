@@ -123,7 +123,9 @@ async def init_db():
                 reserved_for INTEGER,
                 created_at TEXT,
                 reserved_at TEXT,
-                used_at TEXT
+                used_at TEXT,
+                message_id INTEGER,
+                chat_id INTEGER
             )
         """)
         await db.execute("""
@@ -779,7 +781,7 @@ async def bulk_update_short_links(mapping):
     finally:
         await db.close()
 
-async def get_available_link_for_user(user_id):
+async def get_available_link_for_user(user_id, chat_id=None, message_id=None):
     db = await get_db()
     try:
         async with db.execute("""
@@ -795,11 +797,24 @@ async def get_available_link_for_user(user_id):
             reserved_at = datetime.now().isoformat()
             await db.execute("""
                 UPDATE free_link_pool
-                SET status = 'reserved', reserved_for = ?, reserved_at = ?
+                SET status = 'reserved', reserved_for = ?, reserved_at = ?, message_id = ?, chat_id = ?
                 WHERE id = ?
-            """, (user_id, reserved_at, link_id))
+            """, (user_id, reserved_at, message_id, chat_id, link_id))
             await db.commit()
             return short_link
+    finally:
+        await db.close()
+
+async def update_reserved_link_message(user_id, chat_id, message_id):
+    db = await get_db()
+    try:
+        await db.execute("""
+            UPDATE free_link_pool
+            SET chat_id = ?, message_id = ?
+            WHERE reserved_for = ? AND status = 'reserved'
+            ORDER BY reserved_at DESC LIMIT 1
+        """, (chat_id, message_id, user_id))
+        await db.commit()
     finally:
         await db.close()
 
@@ -807,21 +822,23 @@ async def verify_and_claim_free_token(token, user_id):
     db = await get_db()
     try:
         async with db.execute("""
-            SELECT id, credits, status, reserved_for
+            SELECT id, credits, status, reserved_for, chat_id, message_id
             FROM free_link_pool WHERE token = ?
         """, (token,)) as cursor:
             row = await cursor.fetchone()
             if not row:
-                return False, "Token invalid hai"
+                return False, "Token invalid hai", None, None
             status = row['status']
             reserved_for = row['reserved_for']
             credits = row['credits']
+            chat_id = row['chat_id']
+            message_id = row['message_id']
             if status == 'used':
-                return False, "Ye link pehle use ho chuka hai"
+                return False, "Ye link pehle use ho chuka hai", None, None
             if status == 'pending' or status == 'available':
-                return False, "Link abhi reserved nahi hai"
+                return False, "Link abhi reserved nahi hai", None, None
             if status == 'reserved' and reserved_for != user_id:
-                return False, "Ye link kisi aur user ke liye reserved hai"
+                return False, "Ye link kisi aur user ke liye reserved hai", None, None
             used_at = datetime.now().isoformat()
             await db.execute("""
                 UPDATE free_link_pool
@@ -829,7 +846,7 @@ async def verify_and_claim_free_token(token, user_id):
                 WHERE id = ?
             """, (used_at, row['id']))
             await db.commit()
-            return True, credits
+            return True, credits, chat_id, message_id
     finally:
         await db.close()
 
