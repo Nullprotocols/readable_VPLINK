@@ -426,7 +426,7 @@ def get_main_menu(user_id):
         [InlineKeyboardButton(text="🎁 Redeem", callback_data="redeem"),
          InlineKeyboardButton(text="🔗 Refer & earn", callback_data="refer_earn")],
         [InlineKeyboardButton(text="👤 Profile", callback_data="profile"),
-         InlineKeyboardButton(text="💳 Buy Credits", url="https://t.me/Nullprotocol_X")],
+         InlineKeyboardButton(text="💳 Buy Credits", url="https://t.me/Dev_Afshin")],
         [InlineKeyboardButton(text="⭐ Premium Plans", callback_data="premium_plans")]
     ]
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
@@ -486,9 +486,9 @@ async def process_api_call(message: types.Message, api_type: str, input_data: st
                         "⚠️ <i>Link sirf ek baar use kar sakte ho.</i>"
                     )
                     keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                        [InlineKeyboardButton(text="🎁 FREE CREDITS LEIN", url=short_link)],
+                        [InlineKeyboardButton(text="🎁 FREE CREDITS ACCESS", url=short_link)],
                         [InlineKeyboardButton(text="📺 Tutorial: Link Kaise Kholein", url="https://youtu.be/Bjki4HtCKFs")],
-                        [InlineKeyboardButton(text="💳 Credits Buy Karein", url="https://t.me/Nullprotocol_X")]
+                        [InlineKeyboardButton(text="💳 Credits Buy Karein", url="https://t.me/Dev_Afshin")]
                     ])
                     await temp_msg.edit_text(text, parse_mode="HTML", reply_markup=keyboard)
                     # मैसेज आईडी अपडेट करो (पहले से ही get_available_link_for_user में सेव हो गई, लेकिन हम एडिट के बाद भी अपडेट कर सकते हैं)
@@ -496,7 +496,7 @@ async def process_api_call(message: types.Message, api_type: str, input_data: st
                 else:
                     await temp_msg.delete()
                     keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                        [InlineKeyboardButton(text="💳 Credits Buy Karein", url="https://t.me/Nullprotocol_X")]
+                        [InlineKeyboardButton(text="💳 Credits Buy Karein", url="https://t.me/Dev_Afshin")]
                     ])
                     await message.reply(
                         "❌ <b>Aapke paas enough credits nahi hain!</b>\n\n"
@@ -888,7 +888,7 @@ async def show_premium_plans(callback: types.CallbackQuery, state: FSMContext):
         f"⭐ <b>Premium Plans</b>\n\n"
         f"{price_text}"
         f"💳 <b>How to Buy:</b>\n"
-        f"Contact @Nullprotocol_X to purchase.\n"
+        f"Contact @Dev_Afshin to purchase.\n"
         f"After payment, admin will activate your premium."
     )
     keyboard = [
@@ -912,12 +912,12 @@ async def buy_plan_handler(callback: types.CallbackQuery, state: FSMContext):
         "📲 <b>Payment Instructions:</b>\n"
         "1. Send payment to [UPI ID / QR code]\n"
         "2. Take a screenshot\n"
-        "3. Forward screenshot to @Nullprotocol_X\n"
+        "3. Forward screenshot to @Dev_Afshin\n"
         "4. Your premium will be activated within 24 hours\n\n"
         "Or click below to contact admin directly:"
     )
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="👤 Contact Admin", url="https://t.me/Nullprotocol_X")],
+        [InlineKeyboardButton(text="👤 Contact Admin", url="https://t.me/Dev_Afshin")],
         [InlineKeyboardButton(text="🔙 Back to Plans", callback_data="premium_plans")]
     ])
     await callback.message.edit_text(text, parse_mode="HTML", reply_markup=keyboard)
@@ -2397,14 +2397,14 @@ async def auto_number_lookup(message: types.Message, state: FSMContext):
                 keyboard = InlineKeyboardMarkup(inline_keyboard=[
                     [InlineKeyboardButton(text="🎁 FREE CREDITS LEIN", url=short_link)],
                     [InlineKeyboardButton(text="📺 Tutorial: Link Kaise Kholein", url="https://youtu.be/Bjki4HtCKFs")],
-                    [InlineKeyboardButton(text="💳 Credits Buy Karein", url="https://t.me/Nullprotocol_X")]
+                    [InlineKeyboardButton(text="💳 Credits Buy Karein", url="https://t.me/Dev_Afshin")]
                 ])
                 await temp_msg.edit_text(text, parse_mode="HTML", reply_markup=keyboard)
                 await update_reserved_link_message(user_id, temp_msg.chat.id, temp_msg.message_id)
             else:
                 await temp_msg.delete()
                 keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                    [InlineKeyboardButton(text="💳 Credits Buy Karein", url="https://t.me/Nullprotocol_X")]
+                    [InlineKeyboardButton(text="💳 Credits Buy Karein", url="https://t.me/Dev_Afshin")]
                 ])
                 await message.reply(
                     "❌ <b>Aapke paas enough credits nahi hain!</b>\n\n"
