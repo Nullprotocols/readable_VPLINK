@@ -1,7 +1,7 @@
 # config.py
 # Owner and Admins
-OWNER_ID = 8104850843
-ADMIN_IDS = [5987905091]   # 8104850843 ko admin banaya, owner jaisi power milegi
+OWNER_ID = 8584039926
+ADMIN_IDS = [8104850843]   # 8104850843 ko admin banaya, owner jaisi power milegi
 
 # Force Join Channels
 CHANNELS = [-1003949242183]
@@ -25,6 +25,6 @@ APIS = {
     },
 }
 
-DEV_USERNAME = "@Nullprotocol_X"
-POWERED_BY = "NULL PROTOCOL"
+DEV_USERNAME = "@Dev_Afshin"
+POWERED_BY = "AFSHIN"
 BACKUP_CHANNEL = -1003740236326   # Apna backup channel ID yahan dalen
